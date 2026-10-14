@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>Word Wizards - Grammar &amp; Spelling Practice</title>
+<style>
+:root{
+  --bg:#fdf6e3; --ink:#2b2d42; --card:#fff; --accent:#6c5ce7; --good:#2ecc71; --bad:#e74c3c;
+  --n:#2d6cdf; --v:#e0392b; --adj:#2e9e4f; --adv:#e08a00; --prep:#8e44ad; --pro:#d6336c;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:"Trebuchet MS","Comic Sans MS",system-ui,sans-serif;background:var(--bg);color:var(--ink);font-size:20px}
+header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:var(--accent);color:#fff;position:sticky;top:0;z-index:5}
+header h1{font-size:22px;margin:0;cursor:pointer}
+#stars{font-weight:bold;font-size:20px}
+main{max-width:860px;margin:0 auto;padding:18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.card{background:var(--card);border-radius:18px;padding:18px;box-shadow:0 3px 10px #0002}
+.menu-card{cursor:pointer;text-align:center;border:3px solid transparent;transition:transform .1s}
+.menu-card:active{transform:scale(.97)}
+.menu-card .big{font-size:48px}
+.menu-card h2{margin:6px 0 4px;font-size:22px}
+.menu-card p{margin:0;font-size:16px;color:#555}
+button{font:inherit;cursor:pointer;border:none;border-radius:14px;padding:10px 18px;background:var(--accent);color:#fff;font-weight:bold}
+button.sec{background:#dfe4ea;color:var(--ink)}
+button.good{background:var(--good)}
+button:disabled{opacity:.4}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.center{text-align:center}
+.q{font-size:24px;margin:8px 0 16px}
+.sentence{font-size:30px;line-height:2.1;text-align:center}
+.w{display:inline-block;padding:0 7px;border-radius:10px;cursor:pointer;border:3px solid transparent}
+.w:hover{background:#eee}
+.w.n{background:var(--n);color:#fff}.w.v{background:var(--v);color:#fff}.w.adj{background:var(--adj);color:#fff}
+.w.adv{background:var(--adv);color:#fff}.w.prep{background:var(--prep);color:#fff}.w.pro{background:var(--pro);color:#fff}
+.w.conj{background:#0a8f8f;color:#fff}.w.interj{background:#7f6000;color:#fff}
+.vbar.slant{height:50px;margin-top:0;transform-origin:bottom;transform:rotate(-25deg) translateX(8px)}
+.w.wrong{animation:shake .4s;border-color:var(--bad)}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+.gap{display:inline-block;width:22px;height:44px;vertical-align:middle;cursor:pointer;position:relative}
+.gap:hover::after{content:"";position:absolute;left:9px;top:2px;bottom:2px;width:4px;background:var(--accent);border-radius:3px}
+.gap.show::after{content:"";position:absolute;left:9px;top:-4px;bottom:-4px;width:5px;background:var(--bad);border-radius:3px}
+.subj{color:var(--n);font-weight:bold}.pred{color:var(--v);font-weight:bold}
+.msg{min-height:56px;font-size:20px;margin:10px 0;padding:10px 14px;border-radius:14px}
+.msg.ok{background:#d5f5e3}.msg.no{background:#fadbd8}.msg.info{background:#eaf2ff}
+.progress{height:12px;background:#e5e5e5;border-radius:8px;overflow:hidden;margin-bottom:14px}
+.progress>div{height:100%;background:var(--good);transition:width .3s}
+input[type=text],textarea{font:inherit;font-size:28px;padding:10px 14px;border:3px solid #ccd;border-radius:14px;width:100%;text-align:center}
+textarea{font-size:18px;text-align:left}
+.diff b{color:var(--bad);text-decoration:underline}
+.legend span{padding:2px 10px;border-radius:10px;color:#fff;font-size:16px;margin:2px;display:inline-block}
+.opt{display:block;width:100%;margin:8px 0;background:#fff;color:var(--ink);border:3px solid #ccd;font-size:24px}
+.opt.right{background:#d5f5e3;border-color:var(--good)}.opt.wrong{background:#fadbd8;border-color:var(--bad)}
+.tag{display:inline-block;background:#eaf2ff;padding:4px 12px;border-radius:12px;font-size:16px;margin:3px}
+.back{margin-bottom:10px}
+/* diagram */
+.diagram{background:#fff;border-radius:18px;padding:20px 14px 30px;overflow-x:auto;box-shadow:inset 0 0 0 3px #eef}
+.main{display:flex;align-items:flex-start;gap:0;min-width:max-content;margin:0 auto;width:max-content}
+.col{display:flex;flex-direction:column;align-items:flex-start}
+.slot{min-width:96px;min-height:46px;border-bottom:4px solid var(--ink);display:flex;align-items:flex-end;justify-content:center;padding:0 8px 2px;font-size:22px;font-weight:bold;cursor:pointer;position:relative;text-align:center}
+.slot .ph{font-size:12px;color:#aab;font-weight:normal;letter-spacing:.5px}
+.slot.sel-target{background:#f3f0ff}
+.slot.ok{background:#d5f5e3}.slot.bad{background:#fadbd8}
+.vbar{width:4px;background:var(--ink);align-self:flex-start;margin-top:-8px}
+.vbar.full{height:66px}.vbar.half{height:50px;margin-top:0}
+.mods{display:flex;flex-direction:column;margin-top:4px;margin-left:20px}
+.slot.mod,.slot.prep{margin-top:6px;min-height:40px;margin-left:12px}
+.slot.mod::before,.slot.prep::before{content:"";position:absolute;left:-2px;bottom:-4px;width:4px;height:44px;background:var(--ink);transform-origin:bottom;transform:rotate(30deg) translateX(-14px)}
+.prepwrap{display:flex;align-items:flex-start;margin-top:4px;margin-left:20px}
+.prepwrap .pobj{margin-left:6px}
+.bank{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:18px 0;min-height:60px}
+.chip{background:#fff;color:var(--ink);border:3px solid var(--accent);font-size:24px;padding:8px 16px}
+.chip.sel{background:var(--accent);color:#fff}
+.chip.used{visibility:hidden}
+.lvl{display:inline-block;padding:6px 14px;border-radius:12px;background:#dfe4ea;margin:3px;cursor:pointer;font-size:16px}
+.lvl.on{background:var(--accent);color:#fff}
+.pop{position:fixed;left:50%;top:40%;transform:translate(-50%,-50%);font-size:90px;pointer-events:none;animation:pop .9s forwards;z-index:20}
+@keyframes pop{0%{opacity:0;transform:translate(-50%,-50%) scale(.3)}30%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-90%) scale(1)}}
+small.help{color:#666;font-size:15px}
+</style>
+</head>
+<body>
+<header><h1 onclick="home()">🧙 Word Wizards</h1><div id="stars"></div></header>
+<main id="app"></main>
+
+<script>
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const app = $('#app');
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+const store = JSON.parse(localStorage.getItem('wordwizards') || '{"stars":0,"missed":{},"custom":[],"dlevel":0,"ddone":{}}');
+const save = () => { localStorage.setItem('wordwizards', JSON.stringify(store)); $('#stars').textContent = '⭐ ' + store.stars; };
+const cheer = ["Great job!", "You got it!", "Nice work!", "Super!", "Awesome!", "Brilliant!"];
+const rc = () => cheer[Math.floor(Math.random() * cheer.length)];
+function star(n = 1) {
+  store.stars += n; save();
+  const p = document.createElement('div'); p.className = 'pop'; p.textContent = '⭐'; document.body.appendChild(p);
+  setTimeout(() => p.remove(), 900);
+}
+function say(text) {
+  if (!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = 0.85;
+  speechSynthesis.speak(u);
+}
+const bar = (i, n) => `<div class="progress"><div style="width:${(i / n) * 100}%"></div></div>`;
+const backBtn = `<button class="sec back" onclick="home()">← Home</button>`;
+function sentenceWords(s) { return s.split(' '); }
+
+/* ---------- home ---------- */
+function home() {
+  speechSynthesis && speechSynthesis.cancel();
+  app.innerHTML = `
+  <p class="center q">What would you like to practice today?</p>
+  <div class="grid">
+    <div class="card menu-card" onclick="spellMenu()"><div class="big">🐝</div><h2>Spelling Bee</h2><p>Listen, then spell the word</p></div>
+    <div class="card menu-card" onclick="posStart()"><div class="big">🎨</div><h2>Parts of Speech</h2><p>Find nouns, verbs, adjectives and more</p></div>
+    <div class="card menu-card" onclick="spStart()"><div class="big">✂️</div><h2>Subject &amp; Predicate</h2><p>Split the sentence in two</p></div>
+    <div class="card menu-card" onclick="diagStart()"><div class="big">📐</div><h2>Sentence Diagrams</h2><p>Build the diagram, step by step</p></div>
+    <div class="card menu-card" onclick="choiceStart('skills')"><div class="big">🧩</div><h2>Sentence Skills</h2><p>Sentence types, fragments, verb types</p></div>
+    <div class="card menu-card" onclick="choiceStart('parts')"><div class="big">🔤</div><h2>Word Parts</h2><p>Prefixes, suffixes and roots</p></div>
+    <div class="card menu-card" onclick="choiceStart('words')"><div class="big">🎯</div><h2>Pick the Right Word</h2><p>their / there, to / too / two...</p></div>
+  </div>
+  <p class="center"><small class="help">Your stars are saved on this device.</small></p>`;
+}
+
+/* ---------- SPELLING ---------- */
+const g = (tip, list) => list.map(([w, s]) => [w, s, tip]);
+const SPELL = {
+  "Q Rule": g("Riggs rule: The letter q is always followed by u, and we say 'kw'.", [["quiet","Please be quiet."],["quick","The rabbit is quick."],["queen","The queen wore a crown."],["quilt","Grandma made a quilt."],["square","Draw a square."],["quit","Never quit trying."]]),
+  "C and G say s and j": g("Riggs rules: c before e, i or y says 's'. g before e, i or y may say 'j'.", [["chance","Give me a chance."],["icing","The cake has icing."],["icy","The road is icy."],["city","We live in a city."],["germ","A germ is tiny."],["giant","The giant was huge."],["gym","We play in the gym."],["giraffe","The giraffe is tall."]]),
+  "Double l, f, s": g("Riggs rule: We often double l, f and s after a single vowel at the end of a one-syllable word.", [["ball","Throw the ball."],["off","Turn off the light."],["miss","I miss you."],["bell","The bell rang."],["stuff","Pack your stuff."],["grass","The grass is green."],["fall","Leaves fall in autumn."],["mess","What a mess!"]]),
+  "ck and dge": g("Riggs rules: ck and dge are used only after a single short vowel.", [["pack","Pack your bag."],["rock","I found a rock."],["duck","The duck swam."],["black","The cat is black."],["badge","The sheriff wore a badge."],["ledge","The bird sat on the ledge."],["bridge","We crossed the bridge."],["fudge","I love chocolate fudge."]]),
+  "sh, ti, si, ci say 'sh'": g("Riggs rules: sh is used at the beginning or end of a syllable. ti, si and ci say 'sh' at the beginning of any syllable after the first.", [["wish","Make a wish."],["fish","The fish swam."],["friendship","Their friendship is strong."],["nation","Our nation is big."],["station","We waited at the station."],["vacation","We went on vacation."],["mansion","The mansion is huge."],["facial","She made a funny facial expression."]]),
+  "Doubling rule": g("Riggs rule: When a one-syllable word ends with one short vowel and one consonant, double the final consonant before a vowel ending.", [["hopping","The frog is hopping."],["running","The dog is running."],["stopped","The bus stopped."],["planned","We planned a trip."],["swimming","We are swimming."],["sitting","The cat is sitting."]]),
+  "Doubling in two-syllable words": g("Riggs rule: In a two-syllable word, double the final consonant if the accent is on the last syllable.", [["admitted","He admitted his mistake."],["beginning","This is the beginning."],["forgetting","I keep forgetting my hat."],["occurred","It occurred yesterday."],["controlled","She controlled the puppet."]]),
+  "Drop the silent e": g("Riggs rule: Silent final e words are written without the e when adding an ending that begins with a vowel.", [["having","We are having fun."],["making","She is making a cake."],["hoping","I am hoping for snow."],["writing","He is writing a story."],["using","She is using a pencil."],["taking","He is taking a nap."]]),
+  "Y changes to i": g("Riggs rule: When adding an ending to a word that ends in y with its own sound, change y to i, unless the ending is -ing.", [["fried","Dad fried an egg."],["cried","The baby cried."],["carried","He carried the box."],["babies","The babies slept."],["families","Many families came."],["stories","I love stories."],["crying","The baby is crying."],["hurried","We hurried home."]]),
+  "-ed says d or t": g("Riggs rule: The letters ed say 'd' or 't' as the past tense ending of a word that does not end in the sound d or t.", [["loved","She loved the gift."],["wrapped","I wrapped the present."],["jumped","He jumped high."],["played","We played outside."],["walked","They walked home."],["cleaned","He cleaned his room."]]),
+  "ay at the end": g("Riggs rule: Base words do not end in a saying 'ay' (except the word a). We use ay most often.", [["may","May I go?"],["pay","I will pay."],["say","What did you say?"],["play","Let us play."],["stay","Please stay."],["birthday","Happy birthday!"]]),
+  "Prefixes un-, non-, en-": g("Prefixes: un- and non- mean 'not'. en- means 'to make or put into'.", [["unhappy","He was unhappy."],["unfair","That is unfair."],["unlock","Unlock the door."],["nonstop","It was a nonstop flight."],["nonsense","That is nonsense."],["enjoy","I enjoy music."],["enlarge","Enlarge the picture."],["encourage","Teachers encourage students."]]),
+  "Suffixes -ly, -y, -ful, -less": g("Suffixes: -ly = in a way. -y = full of. -ful = full of. -less = without.", [["slowly","The turtle moved slowly."],["quickly","He ran quickly."],["gently","She held it gently."],["rainy","It was a rainy day."],["careful","Be careful."],["helpful","She is helpful."],["hopeless","It seemed hopeless."],["fearless","The knight was fearless."]]),
+  "-able and -ible": g("Suffixes -able and -ible both mean 'able to be'.", [["comfortable","The couch is comfortable."],["readable","His writing is readable."],["enjoyable","It was enjoyable."],["possible","Is it possible?"],["visible","The moon is visible."],["terrible","What a terrible storm."]]),
+  "Word roots: arch and graph": g("Root arch means ruler or chief. Root graph means write or draw.", [["monarch","The monarch ruled the land."],["anarchy","Without laws, there is anarchy."],["hierarchy","The army has a hierarchy."],["autograph","She signed an autograph."],["photograph","Take a photograph."],["paragraph","Write one paragraph."],["biography","I read a biography."]]),
+  "Tricky words": g("Learn this one by heart. Say it in parts as you spell it.", [["because","I smiled because I was happy."],["through","We walked through the door."],["thought","I thought about it."],["different","Cats and dogs are different."],["favorite","Blue is my favorite color."],["beautiful","What a beautiful day!"],["again","Say it again."],["enough","I have had enough."],["laugh","It made me laugh."],["friend","She is my friend."],["believe","I believe you."],["neighbor","My neighbor waved."]]),
+  "Words that sound the same": g("Homophones sound the same but have different spellings and meanings. Use the sentence to decide.", [["their","It is their house."],["there","Put it over there."],["they're","They're coming soon."],["hear","I hear music."],["here","Come over here."],["write","Write your name."],["right","Turn right."],["knew","I knew the answer."],["new","I got new shoes."]])
+};
+let sp = null;
+function spellGroups() { const g = Object.keys(SPELL); if (store.custom.length) g.unshift("My school list"); return g; }
+function spellMenu() {
+  const groups = spellGroups();
+  app.innerHTML = `${backBtn}<h2>🐝 Spelling Bee</h2><p>Pick a word group. You will hear each word, then type it.</p>
+  <div class="grid">${groups.map((g, k) => `<div class="card menu-card" onclick="spellStart(${k})"><h2>${esc(g)}</h2><p>${g === "My school list" ? store.custom.length : SPELL[g].length} words</p></div>`).join('')}
+  <div class="card menu-card" onclick='spellStart("Mix")'><h2>🎲 Mix of everything</h2><p>Words you missed come back first</p></div></div>
+  <div class="card" style="margin-top:18px"><b>Add this week's school spelling list</b><br><small class="help">One word per line.</small>
+  <textarea id="custom" rows="5">${esc(store.custom.join('\n'))}</textarea><br><br><button onclick="saveCustom()">Save list</button></div>`;
+}
+function saveCustom() {
+  store.custom = $('#custom').value.split('\n').map(s => s.trim()).filter(Boolean); save(); spellMenu();
+}
+function spellStart(group) {
+  if (typeof group === 'number') group = spellGroups()[group];
+  let pool;
+  if (group === "My school list") pool = store.custom.map(w => [w, '', 'Sound it out slowly, one syllable at a time.']);
+  else if (group === "Mix") pool = Object.values(SPELL).flat().concat(store.custom.map(w => [w, '', 'Sound it out slowly.']));
+  else pool = SPELL[group];
+  pool = shuffle(pool).sort((a, b) => (store.missed[b[0]] || 0) - (store.missed[a[0]] || 0)).slice(0, 8);
+  sp = { q: shuffle(pool), i: 0, right: 0, phase: 'ask', hint: false, retried: new Set() };
+  spellShow();
+}
+function spellShow() {
+  if (sp.i >= sp.q.length) {
+    const bonus = sp.right === sp.q.length ? 3 : 0; if (bonus) star(bonus);
+    app.innerHTML = `${backBtn}<div class="card center"><div style="font-size:70px">🏆</div><h2>You spelled ${sp.right} of ${sp.q.length} on the first try!</h2>
+    <p>${bonus ? 'Perfect round! +3 bonus stars!' : 'Words you missed will come back so you can master them.'}</p>
+    <button onclick="spellMenu()">Play again</button></div>`; return;
+  }
+  const [w, s, tip] = sp.q[sp.i];
+  app.innerHTML = `${backBtn}${bar(sp.i, sp.q.length)}
+  <div class="card center">
+    <p class="q">Word ${sp.i + 1} of ${sp.q.length}</p>
+    <div class="row" style="justify-content:center"><button onclick="spSay()">🔊 Say the word</button>${s ? `<button class="sec" onclick="spSaySent()">💬 In a sentence</button>` : ''}<button class="sec" onclick="spHint()">💡 First letter</button></div>
+    <p id="hint" style="font-size:28px;letter-spacing:6px;min-height:40px"></p>
+    <input id="ans" type="text" autocomplete="off" autocorrect="off" autocapitalize="none" spellcheck="false" placeholder="type here" onkeydown="if(event.key==='Enter')spCheck()">
+    <p><button class="good" onclick="spCheck()">Check ✔</button></p>
+    <div id="msg" class="msg info" style="display:none"></div>
+  </div>`;
+  $('#ans').focus(); sp.phase = 'ask'; sp.hint = false; setTimeout(spSay, 300);
+}
+const spSay = () => say(sp.q[sp.i][0]);
+const spSaySent = () => say(sp.q[sp.i][1]);
+function spHint() { const w = sp.q[sp.i][0]; $('#hint').textContent = w[0] + ' ' + '_ '.repeat(w.length - 1); sp.hint = true; $('#ans').focus(); }
+function spCheck() {
+  const [w, s, tip] = sp.q[sp.i]; const a = $('#ans').value.trim().toLowerCase(); const m = $('#msg'); m.style.display = 'block';
+  if (!a) return;
+  if (a === w.toLowerCase()) {
+    if (sp.phase === 'ask') { sp.right++; if (store.missed[w]) store.missed[w] = Math.max(0, store.missed[w] - 1); star(sp.hint ? 1 : 2); }
+    m.className = 'msg ok';
+    m.innerHTML = `${rc()} <b>${esc(w)}</b> ✔<br><small>${esc(tip)}</small><br><button onclick="sp.i++;spellShow()">Next →</button>`;
+    $('#ans').disabled = true;
+  } else {
+    if (sp.phase === 'ask') { store.missed[w] = (store.missed[w] || 0) + 1; save(); }
+    sp.phase = 'copy';
+    let diff = ''; for (let i = 0; i < w.length; i++) diff += a[i] === w[i].toLowerCase() ? esc(w[i]) : `<b>${esc(w[i])}</b>`;
+    m.className = 'msg no';
+    m.innerHTML = `Almost! The word is <span class="diff" style="font-size:28px">${diff}</span><br><small>💡 ${esc(tip)}</small><br>Type it the right way to keep going.`;
+    $('#ans').value = ''; $('#ans').focus();
+  }
+}
+
+/* ---------- PARTS OF SPEECH ---------- */
+const POS = {
+  n: ['Noun', 'A noun names a person, place, thing, or idea.'],
+  v: ['Verb', 'A verb shows action (run, jump) or being (is, are).'],
+  adj: ['Adjective', 'An adjective describes a noun: what kind, which one, how many. A, an, and the are adjectives too!'],
+  adv: ['Adverb', 'An adverb describes a verb: how, when, or where it happens. Many end in -ly.'],
+  prep: ['Preposition', 'A preposition shows where something is (on, in, over, behind, into).'],
+  pro: ['Pronoun', 'A pronoun takes the place of a noun (she, he, we, they).'],
+  conj: ['Conjunction', 'A coordinating conjunction joins words or sentences: for, and, nor, but, or, yet, so (FANBOYS).'],
+  interj: ['Interjection', 'An interjection shows strong feeling (Wow! Oh! Ouch!).']
+};
+const POSS = ["The|adj brown|adj dog|n barked|v loudly|adv", "A|adj tiny|adj bird|n sang|v sweetly|adv", "The|adj hungry|adj bear|n caught|v a|adj fish|n",
+  "Tom|n walked|v slowly|adv", "The|adj cat|n slept|v on|prep the|adj warm|adj couch|n", "She|pro opened|v the|adj old|adj door|n carefully|adv",
+  "Birds|n fly|v over|prep the|adj tall|adj trees|n", "We|pro ate|v three|adj apples|n", "The|adj children|n played|v happily|adv in|prep the|adj park|n",
+  "He|pro painted|v a|adj bright|adj picture|n", "Lightning|n flashed|v suddenly|adv", "My|adj brother|n kicked|v the|adj round|adj ball|n",
+  "They|pro hid|v behind|prep the|adj big|adj rock|n", "The|adj gentle|adj rain|n fell|v softly|adv", "Grandma|n baked|v fresh|adj cookies|n",
+  "The|adj puppy|n jumped|v into|prep the|adj cold|adj lake|n",
+  "Tom|n and|conj Sam|n played|v outside|adv", "I|pro wanted|v pizza|n but|conj Dad|n made|v soup|n", "We|pro can|v walk|v or|conj ride|v",
+  "Wow|interj the|adj fireworks|n shone|v brightly|adv", "Oh|interj I|pro lost|v my|adj hat|n", "The|adj dog|n barked|v and|conj the|adj cat|n ran|v",
+  "She|pro was|v reading|v a|adj book|n"].map(s => s.split(' ').map(x => { const [t, p] = x.split('|'); return { t, p }; }));
+let ps = null;
+function posStart() {
+  const qs = shuffle(POSS).slice(0, 8).map(s => { const kinds = [...new Set(s.map(w => w.p))]; return { s, target: kinds[Math.floor(Math.random() * kinds.length)] }; });
+  ps = { qs, i: 0, score: 0, tries: 0 }; posShow();
+}
+function posShow() {
+  if (ps.i >= ps.qs.length) { app.innerHTML = `${backBtn}<div class="card center"><div style="font-size:70px">🎨</div><h2>${ps.score} of ${ps.qs.length} on the first try!</h2><button onclick="posStart()">Play again</button></div>`; return; }
+  const { s, target } = ps.qs[ps.i]; ps.tries = 0;
+  app.innerHTML = `${backBtn}${bar(ps.i, ps.qs.length)}
+  <div class="card"><p class="q center">Tap the <b>${POS[target][0].toUpperCase()}</b> <small class="help">(there may be more than one)</small></p>
+  <div class="sentence" id="sent">${s.map((w, k) => `<span class="w" data-k="${k}" onclick="posTap(${k})">${esc(w.t)}</span>`).join(' ')}.</div>
+  <div id="msg" class="msg info">💡 ${esc(POS[target][1])}</div>
+  <div class="row"><button class="good" id="done" onclick="posNext()" style="display:none">Next →</button></div></div>`;
+}
+function posTap(k) {
+  const { s, target } = ps.qs[ps.i]; const el = document.querySelector(`.w[data-k="${k}"]`); const m = $('#msg');
+  if (el.classList.contains(s[k].p)) return;
+  if (s[k].p === target) {
+    el.classList.add(s[k].p); if (ps.tries === 0 && !ps.qs[ps.i].got) { star(1); }
+    ps.qs[ps.i].got = true;
+    const left = s.filter((w, j) => w.p === target && !document.querySelector(`.w[data-k="${j}"]`).classList.contains(target)).length;
+    if (!left) {
+      if (ps.tries === 0) ps.score++;
+      m.className = 'msg ok'; m.textContent = rc() + ' Every ' + POS[target][0].toLowerCase() + ' found.';
+      s.forEach((w, j) => document.querySelector(`.w[data-k="${j}"]`).classList.add(w.p));
+      $('#done').style.display = 'inline-block';
+    } else { m.className = 'msg ok'; m.textContent = 'Yes! Is there another one?'; }
+  } else {
+    ps.tries++; el.classList.add('wrong'); setTimeout(() => el.classList.remove('wrong'), 450);
+    m.className = 'msg no';
+    m.textContent = `"${s[k].t}" is a ${POS[s[k].p][0].toLowerCase()}, not a ${POS[target][0].toLowerCase()}. ${POS[target][1]}`;
+  }
+}
+const posNext = () => { ps.i++; posShow(); };
+
+/* ---------- SUBJECT & PREDICATE ---------- */
+const SPS = ["The little girl|sang a happy song", "My dog|chased the squirrel", "Our teacher|reads to us every day", "The tall oak tree|fell in the storm",
+  "Birds|fly south in the winter", "Mom and Dad|baked a cake", "The fluffy white clouds|drifted across the sky", "Jack|rode his bike to school",
+  "The brave firefighter|climbed the ladder", "Rain|tapped on the window", "My little brother|loves pizza", "The old wooden boat|floated down the river",
+  "Sara and Ben|built a sandcastle", "The hungry kitten|drank some milk", "A bright star|twinkled above us"];
+let sps = null;
+function spStart() { sps = { qs: shuffle(SPS).slice(0, 8), i: 0, score: 0, tries: 0 }; spShow(); }
+function spShow() {
+  if (sps.i >= sps.qs.length) { app.innerHTML = `${backBtn}<div class="card center"><div style="font-size:70px">✂️</div><h2>${sps.score} of ${sps.qs.length} on the first try!</h2><button onclick="spStart()">Play again</button></div>`; return; }
+  const [a, b] = sps.qs[sps.i].split('|'); const w = (a + ' ' + b).split(' '); sps.tries = 0; sps.cut = a.split(' ').length;
+  let html = ''; w.forEach((x, k) => { html += `<span>${esc(x)}</span>`; if (k < w.length - 1) html += `<span class="gap" data-g="${k + 1}" onclick="spTap(${k + 1})"></span>`; });
+  app.innerHTML = `${backBtn}${bar(sps.i, sps.qs.length)}
+  <div class="card"><p class="q center">Tap the space where the <span class="subj">subject</span> ends and the <span class="pred">predicate</span> begins.</p>
+  <div class="sentence" id="sent">${html}.</div>
+  <div id="msg" class="msg info">💡 The <b>subject</b> is who or what the sentence is about. The <b>predicate</b> tells what the subject does or is. Cover the predicate: what is left is the subject!</div>
+  <button class="good" id="done" onclick="sps.i++;spShow()" style="display:none">Next →</button></div>`;
+}
+function spTap(g) {
+  const m = $('#msg');
+  if (g === sps.cut) {
+    if (sps.tries === 0) { sps.score++; star(1); }
+    const [a, b] = sps.qs[sps.i].split('|');
+    $('#sent').innerHTML = `<span class="subj">${esc(a)}</span> <span style="color:#999">|</span> <span class="pred">${esc(b)}</span>.`;
+    m.className = 'msg ok'; m.innerHTML = `${rc()} <span class="subj">${esc(a)}</span> is the subject (who or what). <span class="pred">${esc(b)}</span> is the predicate (what it did).`;
+    $('#done').style.display = 'inline-block';
+  } else {
+    sps.tries++; m.className = 'msg no';
+    m.textContent = g < sps.cut ? 'Not quite. The subject is bigger: include every word that describes who or what the sentence is about. Try again.' : 'Too far. Find the verb (the action). The subject comes just before the predicate begins. Try again.';
+  }
+}
+
+/* ---------- PICK THE RIGHT WORD ---------- */
+const CH = [
+  ["It is ___ house.", ["their", "there", "they're"], "their", "Their shows ownership: their house, their toys."],
+  ["Put the box over ___.", ["their", "there", "they're"], "there", "There is a place. Think: here and there."],
+  ["___ going to the zoo.", ["Their", "There", "They're"], "They're", "They're = they are. Try it: 'They are going to the zoo.'"],
+  ["I want to go ___.", ["to", "too", "two"], "too", "Too means also or very."],
+  ["I have ___ brothers.", ["to", "too", "two"], "two", "Two is the number 2."],
+  ["We walked ___ the park.", ["to", "too", "two"], "to", "To shows direction: to the park, to school."],
+  ["The dog wagged ___ tail.", ["its", "it's"], "its", "Its shows ownership. It's always means 'it is'."],
+  ["___ raining outside.", ["Its", "It's"], "It's", "It's = it is. 'It is raining outside.'"],
+  ["Can you ___ the music?", ["hear", "here"], "hear", "You hear with your ear."],
+  ["Come ___ right now!", ["hear", "here"], "here", "Here is a place, like there."],
+  ["I ___ the answer yesterday.", ["new", "knew"], "knew", "Knew is the past of know."],
+  ["She got a ___ backpack.", ["new", "knew"], "new", "New is the opposite of old."],
+  ["Please ___ your name.", ["write", "right"], "write", "Write means to put words on paper."],
+  ["Turn ___ at the corner.", ["write", "right"], "right", "Right is a direction (and also means correct)."],
+  ["Who ___ the last cookie?", ["ate", "eight"], "ate", "Ate is the past of eat."],
+  ["He is ___ years old.", ["ate", "eight"], "eight", "Eight is the number 8."],
+  ["The ___ shines in the sky.", ["sun", "son"], "sun", "The sun is a star. A son is a boy child."],
+  ["I like to ___ books.", ["read", "red"], "read", "Read is something you do with a book."]
+];
+const SKILLS = [
+  ["What kind of sentence is this? 'The dog barked at the mailman.'", ["declarative","interrogative","exclamatory","imperative"], "declarative", "A declarative sentence makes a statement and ends with a period."],
+  ["What kind of sentence is this? 'Where did you put my shoes?'", ["declarative","interrogative","exclamatory","imperative"], "interrogative", "An interrogative sentence asks a question and ends with a question mark."],
+  ["What kind of sentence is this? 'What a huge wave that was!'", ["declarative","interrogative","exclamatory","imperative"], "exclamatory", "An exclamatory sentence shows strong feeling and ends with an exclamation point."],
+  ["What kind of sentence is this? 'Please close the door.'", ["declarative","interrogative","exclamatory","imperative"], "imperative", "An imperative sentence gives a command or request. The subject 'you' is understood."],
+  ["What kind of sentence is this? 'Do you like pizza?'", ["declarative","interrogative","exclamatory","imperative"], "interrogative", "It asks a question."],
+  ["What kind of sentence is this? 'Wash your hands before dinner.'", ["declarative","interrogative","exclamatory","imperative"], "imperative", "It gives a command."],
+  ["Which one is a complete sentence?", ["Running down the hill.","The tired puppy slept.","Because it was raining."], "The tired puppy slept.", "A complete sentence has a subject and a predicate and tells a whole thought."],
+  ["Which one is a complete sentence?", ["Under the old bridge.","My best friend and I.","Birds build nests."], "Birds build nests.", "It has a subject (Birds) and a predicate (build nests)."],
+  ["'The big brown dog.' Is this a fragment, a run-on, or a complete sentence?", ["fragment","run-on","complete sentence"], "fragment", "It has a subject but no predicate. What did the dog do?"],
+  ["'Ran to the store.' Is this a fragment, a run-on, or a complete sentence?", ["fragment","run-on","complete sentence"], "fragment", "It has a predicate but no subject. Who ran?"],
+  ["'I like soup my brother likes pizza.' Is this a fragment, a run-on, or a complete sentence?", ["fragment","run-on","complete sentence"], "run-on", "Two complete sentences are stuck together. Add a period, or a comma and a conjunction (and, but)."],
+  ["'We ate lunch, and then we played.' Is this a fragment, a run-on, or a complete sentence?", ["fragment","run-on","complete sentence"], "complete sentence", "A comma plus a conjunction joins two complete thoughts correctly."],
+  ["What kind of verb is 'ran'? 'The dog ran home.'", ["action verb","linking verb","helping verb"], "action verb", "Ran shows something you can do."],
+  ["What kind of verb is 'is'? 'The sky is blue.'", ["action verb","linking verb","helping verb"], "linking verb", "A linking verb links the subject to a word that describes or renames it (sky = blue)."],
+  ["What kind of verb is 'smells'? 'The soup smells delicious.'", ["action verb","linking verb","helping verb"], "linking verb", "Test it: could you swap in 'is'? 'The soup is delicious.' Yes, so it links."],
+  ["What kind of verb is 'smelled'? 'Sam smelled the flowers.'", ["action verb","linking verb","helping verb"], "action verb", "Sam did something: he smelled. Swapping in 'is' would not make sense."],
+  ["Which word is the helping verb? 'She will sing tonight.'", ["She","will","sing","tonight"], "will", "A helping verb comes before the main verb (will sing)."],
+  ["Which word is the helping verb? 'The kids are playing outside.'", ["kids","are","playing","outside"], "are", "Are helps the main verb playing."],
+  ["Which sentence uses the progressive (-ing) tense?", ["She is reading a book.","She read a book.","She reads a book."], "She is reading a book.", "Progressive verbs show an action that is going on: is + verb-ing."],
+  ["Which is a coordinating conjunction?", ["but","under","quickly","happy"], "but", "FANBOYS: for, and, nor, but, or, yet, so."],
+  ["Choose the best conjunction: 'I wanted to play, ___ it was raining.'", ["but","and","or"], "but", "But shows a contrast."],
+  ["Which word is a pronoun?", ["they","table","run","green"], "they", "A pronoun takes the place of a noun."],
+  ["What is the complete subject of 'The fluffy kitten drank some milk'?", ["The fluffy kitten","drank some milk","milk"], "The fluffy kitten", "The complete subject is who or what the sentence is about."],
+  ["What is the predicate of 'My dad cooked dinner'?", ["My dad","cooked dinner","dinner"], "cooked dinner", "The predicate tells what the subject does or is."],
+  ["Which sentence has dialogue punctuated correctly?", ['"Come here," said Mom.','"Come here" said Mom.','"Come here, said Mom."'], '"Come here," said Mom.', "The comma goes inside the quotation marks before 'said'."]
+];
+const PARTS = [
+  ["The prefix un- means...", ["not","again","before","full of"], "not", "unhappy = not happy."],
+  ["The prefix non- means...", ["not","after","under","full of"], "not", "nonsense = not sense."],
+  ["The prefix en- means...", ["to make or put into","not","without","again"], "to make or put into", "enlarge = make larger."],
+  ["What does 'unfair' mean?", ["not fair","very fair","fair again"], "not fair", "un- = not."],
+  ["What does 'enlarge' mean?", ["make larger","not large","a large thing"], "make larger", "en- = make."],
+  ["The suffix -ly tells that something is done...", ["in a way","without","again","before"], "in a way", "slowly = in a slow way."],
+  ["The suffix -ful means...", ["full of","without","not","again"], "full of", "careful = full of care."],
+  ["The suffix -less means...", ["without","full of","not","again"], "without", "hopeless = without hope."],
+  ["Which word means 'without fear'?", ["fearful","fearless","unfear"], "fearless", "-less = without."],
+  ["Which word means 'full of help'?", ["helpless","helpful","unhelp"], "helpful", "-ful = full of."],
+  ["The suffix -y can turn a noun into an adjective. 'rain' becomes...", ["rainy","rainly","rainful"], "rainy", "rainy = full of rain."],
+  ["The suffixes -able and -ible mean...", ["able to be","without","full of","not"], "able to be", "readable = able to be read."],
+  ["The root arch means...", ["ruler or chief","write or draw","water","earth"], "ruler or chief", "monarch = one ruler."],
+  ["The root graph means...", ["write or draw","ruler or chief","earth","small"], "write or draw", "paragraph, autograph, photograph."],
+  ["Which word has the root graph?", ["photograph","pharmacy","giraffe"], "photograph", "photo + graph = light writing."],
+  ["Which word has the root arch meaning 'ruler'?", ["monarch","march","archery"], "monarch", "mon = one, arch = ruler."]
+];
+const BANKS = { words: [CH, "Pick the Right Word"], skills: [SKILLS, "Sentence Skills"], parts: [PARTS, "Word Parts"] };
+let ch = null;
+function choiceStart(key = 'words') { ch = { key, qs: shuffle(BANKS[key][0]).slice(0, 10), i: 0, score: 0, tries: 0 }; choiceShow(); }
+function choiceShow() {
+  if (ch.i >= ch.qs.length) { app.innerHTML = `${backBtn}<div class="card center"><div style="font-size:70px">🎯</div><h2>${ch.score} of ${ch.qs.length} on the first try!</h2><button onclick="choiceStart(ch.key)">Play again</button></div>`; return; }
+  const [s, opts, ans, tip] = ch.qs[ch.i]; ch.tries = 0;
+  app.innerHTML = `${backBtn}${bar(ch.i, ch.qs.length)}<div class="card"><p class="q center">${BANKS[ch.key][1]}</p><p class="sentence" style="font-size:26px">${esc(s).replace('___', '<b>_____</b>')}</p>
+  ${(ch.cur = shuffle(opts)).map((o, k) => `<button class="opt" onclick="choicePick(this,${k})">${esc(o)}</button>`).join('')}
+  <div id="msg" class="msg info" style="display:none"></div><button class="good" id="done" onclick="ch.i++;choiceShow()" style="display:none">Next →</button></div>`;
+}
+function choicePick(btn, k) {
+  const [s, opts, ans, tip] = ch.qs[ch.i]; const o = ch.cur[k]; const m = $('#msg'); m.style.display = 'block';
+  if (o === ans) {
+    btn.classList.add('right'); if (ch.tries === 0) { ch.score++; star(1); }
+    m.className = 'msg ok'; m.innerHTML = `${rc()} ${esc(tip)}`; $('#done').style.display = 'inline-block';
+    document.querySelectorAll('.opt').forEach(b => b.disabled = true); if (ch.key === 'words') say(s.replace('___', ans));
+  } else { ch.tries++; btn.classList.add('wrong'); btn.disabled = true; m.className = 'msg no'; m.textContent = 'Not quite. Try another one.'; }
+}
+
+/* ---------- SENTENCE DIAGRAMS ---------- */
+/* w: words; S/V/O: head indexes; m: head -> modifier indexes; p: prepositional phrases {to, prep, obj, om} */
+const D = (text, S, V, O, m, p, ot) => ({ w: text.split(' '), S, V, O, m: m || {}, p: p || [], ot: ot || 'obj' });
+const LEVELS = [
+  { name: "1. Subject + Verb", help: "Find the action (verb) first. Then ask: who or what did it? That is the subject. The subject goes on the left, the verb on the right, with a line between that crosses the baseline.",
+    items: [D("Dogs bark", 0, 1), D("Birds sing", 0, 1), D("Fish swim", 0, 1), D("Children laugh", 0, 1), D("Rain fell", 0, 1)] },
+  { name: "2. Adjectives", help: "Adjectives describe the noun. Each one goes on a slanted line under the word it describes. (A, an, the count!)",
+    items: [D("The happy dog barked", 2, 3, null, { 2: [0, 1] }), D("A tiny bird sang", 2, 3, null, { 2: [0, 1] }), D("Big dogs bark", 1, 2, null, { 1: [0] }), D("The old clock stopped", 2, 3, null, { 2: [0, 1] }), D("Cold rain fell", 1, 2, null, { 1: [0] })] },
+  { name: "3. Adverbs", help: "Adverbs describe the verb (how, when, where). They go on a slanted line under the verb.",
+    items: [D("Dogs bark loudly", 0, 1, null, { 1: [2] }), D("The bird sang sweetly", 1, 2, null, { 1: [0], 2: [3] }), D("Children laugh often", 0, 1, null, { 1: [2] }), D("The tiny mouse ran quickly", 2, 3, null, { 2: [0, 1], 3: [4] }), D("Rain fell softly", 0, 1, null, { 1: [2] })] },
+  { name: "4. Direct objects", help: "A direct object receives the action. Ask: verb + WHAT? Put it after the verb with a short line that stops at the baseline (it does not cross).",
+    items: [D("Dogs chase cats", 0, 1, 2), D("The cat chased the mouse", 1, 2, 4, { 1: [0], 4: [3] }), D("Mia kicked the red ball", 0, 1, 4, { 4: [2, 3] }), D("The boy ate a sandwich", 1, 2, 4, { 1: [0], 4: [3] }), D("Grandma baked fresh cookies", 0, 1, 3, { 3: [2] })] },
+  { name: "5. Prepositional phrases", help: "A prepositional phrase (on the couch) hangs under the word it describes. The preposition goes on the slanted line, and its object sits on a flat line. Adjectives hang under the object.",
+    items: [D("The cat slept on the couch", 1, 2, null, { 1: [0] }, [{ to: 2, prep: 3, obj: 5, om: [4] }]),
+      D("Birds fly over the tall trees", 0, 1, null, {}, [{ to: 1, prep: 2, obj: 5, om: [3, 4] }]),
+      D("The dog ran into the yard", 1, 2, null, { 1: [0] }, [{ to: 2, prep: 3, obj: 5, om: [4] }]),
+      D("Mia kicked the ball over the fence", 0, 1, 3, { 3: [2] }, [{ to: 1, prep: 4, obj: 6, om: [5] }]),
+      D("The children played in the park", 1, 2, null, { 1: [0] }, [{ to: 2, prep: 3, obj: 5, om: [4] }])] },
+  { name: "6. Linking verbs", help: "A linking verb (is, are, was, smells, looks...) links the subject to a word that renames it (predicate noun) or describes it (predicate adjective). That word goes after the verb on a slanted line that points back toward the subject.",
+    items: [D("Billy is my friend", 0, 1, 3, { 3: [2] }, [], 'pn'), D("Mia is a good student", 0, 1, 4, { 4: [2, 3] }, [], 'pn'), D("Dogs are animals", 0, 1, 2, {}, [], 'pn'),
+      D("The sky is blue", 1, 2, 3, { 1: [0] }, [], 'pa'), D("The soup smells delicious", 1, 2, 3, { 1: [0] }, [], 'pa'), D("Sam is our teacher", 0, 1, 3, { 3: [2] }, [], 'pn')] }
+];
+let dg = null;
+function diagStart() {
+  app.innerHTML = `${backBtn}<h2>📐 Sentence Diagrams</h2><p>Choose a level. Start at 1 and work your way up!</p>
+  ${LEVELS.map((l, i) => `<div class="card menu-card" style="text-align:left;margin-bottom:12px" onclick="diagLevel(${i})"><h2>${l.name}</h2><p>${(store.ddone[i] || 0)} of ${l.items.length} done ${store.ddone[i] >= l.items.length ? '🌟' : ''}</p></div>`).join('')}`;
+}
+function diagLevel(l) { dg = { l, order: shuffle(LEVELS[l].items.map((_, i) => i)), n: 0 }; diagLoad(); }
+function diagLoad() {
+  if (dg.n >= dg.order.length) { app.innerHTML = `${backBtn}<div class="card center"><div style="font-size:70px">📐</div><h2>Level complete!</h2><button onclick="diagStart()">Pick a level</button></div>`; return; }
+  const d = LEVELS[dg.l].items[dg.order[dg.n]]; dg.d = d; dg.sel = null; dg.placed = {}; dg.res = {}; dg.done = false; dg.slots = [];
+  const slot = (kind, idx, grp, label) => { const id = dg.slots.length; dg.slots.push({ id, kind, exp: d.w[idx].toLowerCase(), grp: grp || ('s' + id), label }); return `[[${id}]]`; };
+  const col = (h, kind, label) => {
+    let x = `<div class="col">${slot(kind, h, null, label)}`;
+    if ((d.m[h] || []).length) x += `<div class="mods">${d.m[h].map(i => slot('mod', i, 'g' + h, (h === d.V) ? 'adverb' : 'adjective')).join('')}</div>`;
+    d.p.filter(p => p.to === h).forEach(p => {
+      x += `<div class="prepwrap">${slot('prep', p.prep, null, 'preposition')}<div class="col pobj">${slot('pobj', p.obj, null, 'object')}`;
+      if (p.om.length) x += `<div class="mods">${p.om.map(i => slot('mod', i, 'o' + p.obj, 'adjective')).join('')}</div>`;
+      x += `</div></div>`;
+    });
+    return x + `</div>`;
+  };
+  let tpl = `<div class="main">${col(d.S, 'subj', 'subject')}<div class="vbar full"></div>${col(d.V, 'verb', 'verb')}`;
+  if (d.O != null) { const lab = { obj: 'direct object', pn: 'predicate noun', pa: 'predicate adjective' }[d.ot]; tpl += `<div class="vbar ${d.ot === 'obj' ? 'half' : 'slant'}"></div>${col(d.O, d.ot, lab)}`; }
+  tpl += `</div>`;
+  dg.tpl = tpl; dg.chips = shuffle(d.w.map((t, i) => i)); dg.msg = ['info', '💡 Tap a word, then tap the spot where it belongs. Need help? Tap "Hint".'];
+  diagRender();
+}
+function diagRender() {
+  const d = dg.d;
+  const usedChips = new Set(Object.values(dg.placed));
+  const html = dg.tpl.replace(/\[\[(\d+)\]\]/g, (_, id) => {
+    id = +id; const s = dg.slots[id]; const c = dg.placed[id];
+    return `<div class="slot ${s.kind === 'mod' || s.kind === 'prep' ? s.kind : ''} ${dg.res[id] || ''} ${dg.sel != null && c == null ? 'sel-target' : ''}" onclick="diagSlot(${id})">${c != null ? esc(d.w[c]) : `<span class="ph">${s.label}</span>`}</div>`;
+  });
+  app.innerHTML = `${backBtn}${bar(dg.n, dg.order.length)}
+  <div class="card"><p class="q center" style="font-size:26px">Diagram: <b>${esc(d.w.join(' '))}.</b></p>
+  <div class="row" style="justify-content:center"><button class="sec" onclick="say('${esc(d.w.join(' '))}')">🔊 Hear it</button></div>
+  <div class="diagram">${html}</div>
+  <div class="bank">${dg.chips.map(i => `<button class="chip ${dg.sel === i ? 'sel' : ''} ${usedChips.has(i) ? 'used' : ''}" onclick="diagChip(${i})">${esc(d.w[i])}</button>`).join('')}</div>
+  <div class="msg ${dg.msg[0]}">${dg.msg[1]}</div>
+  <div class="row" style="justify-content:center">
+   ${dg.done ? `<button class="good" onclick="dg.n++;diagLoad()">Next →</button>` : `<button class="good" onclick="diagCheck()">Check ✔</button><button class="sec" onclick="diagHint()">💡 Hint</button><button class="sec" onclick="diagShow()">👀 Show me</button><button class="sec" onclick="dg.placed={};dg.res={};dg.sel=null;diagRender()">↺ Clear</button>`}
+  </div></div>`;
+}
+function diagChip(i) { if (Object.values(dg.placed).includes(i) || dg.done) return; dg.sel = dg.sel === i ? null : i; diagRender(); }
+function diagSlot(id) {
+  if (dg.done) return; delete dg.res[id];
+  if (dg.sel != null) { dg.placed[id] = dg.sel; dg.sel = null; }
+  else if (dg.placed[id] != null) delete dg.placed[id];
+  diagRender();
+}
+function diagCheck() {
+  const d = dg.d; const text = id => dg.placed[id] != null ? d.w[dg.placed[id]].toLowerCase() : null;
+  if (Object.keys(dg.placed).length < dg.slots.length) { dg.msg = ['info', 'Put every word in the diagram first. Words left in the bank still need a spot.']; return diagRender(); }
+  dg.res = {}; let bad = 0; const groups = {};
+  dg.slots.forEach(s => { (groups[s.grp] = groups[s.grp] || []).push(s); });
+  Object.values(groups).forEach(g => {
+    const exp = g.map(s => s.exp).sort(), got = g.map(s => text(s.id)).sort();
+    g.forEach(s => { const ok = g.length === 1 ? text(s.id) === s.exp : exp.includes(text(s.id)) && exp.join() === got.join(); dg.res[s.id] = ok ? 'ok' : 'bad'; if (!ok) bad++; });
+  });
+  if (!bad) {
+    dg.done = true; dg.msg = ['ok', `${rc()} Perfect diagram!`]; star(2); store.ddone[dg.l] = Math.max(store.ddone[dg.l] || 0, dg.n + 1); save();
+  } else {
+    const firstBad = dg.slots.find(s => dg.res[s.id] === 'bad');
+    dg.msg = ['no', `${bad} spot${bad > 1 ? 's' : ''} to fix (shown in red). Tap a red word to pick it back up. Look at the red ${firstBad.label} spot: ${tipFor(firstBad)}`];
+  }
+  diagRender();
+}
+function tipFor(s) {
+  return ({ subj: 'who or what is the sentence about?', verb: 'which word is the action?', obj: 'verb + WHAT? The thing that receives the action.', pn: 'which noun after the linking verb renames the subject?', pa: 'which word after the linking verb describes the subject?', mod: 'which word does it describe? Adverbs describe the verb; adjectives describe nouns.', prep: 'which word shows position or direction (on, in, over...)?', pobj: 'what comes after the preposition?' })[s.kind];
+}
+function diagHint() {
+  const d = dg.d; const first = dg.slots.find(s => dg.placed[s.id] == null);
+  const h = [`Step 1: Find the verb (action): <b>${esc(d.w[d.V])}</b>. Put it on the right of the vertical line.`, `Step 2: Who or what ${esc(d.w[d.V])}? That is the subject: <b>${esc(d.w[d.S])}</b>.`];
+  dg.msg = ['info', first && first.kind === 'verb' ? h[0] : first && first.kind === 'subj' ? h[1] : `Next empty spot is the <b>${first ? first.label : ''}</b>: ${first ? tipFor(first) : ''}<br><small>${esc(LEVELS[dg.l].help)}</small>`];
+  diagRender();
+}
+function diagShow() {
+  const d = dg.d; dg.placed = {}; const used = new Set();
+  dg.slots.forEach(s => { const i = d.w.findIndex((w, k) => w.toLowerCase() === s.exp && !used.has(k)); used.add(i); dg.placed[s.id] = i; });
+  dg.res = {}; dg.done = true; dg.msg = ['info', 'Here is the finished diagram. Study it, then try the next one on your own!']; diagRender();
+}
+
+/* ---------- start ---------- */
+save(); home();
+</script>
+</body>
+</html>
