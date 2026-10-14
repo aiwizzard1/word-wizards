@@ -99,12 +99,33 @@ function star(n = 1) {
   const p = document.createElement('div'); p.className = 'pop'; p.textContent = '⭐'; document.body.appendChild(p);
   setTimeout(() => p.remove(), 900);
 }
+const NOVELTY = /albert|bad news|bahh|bells|boing|bubbles|cellos|wobble|fred|good news|jester|junior|organ|superstar|ralph|trinoids|whisper|zarvox|hysterical|pipe|deranged|kathy|princess|bruce|agnes|vicki|victoria|compact/i;
+const PREFERRED = [/natural|neural|online/i, /premium|enhanced|siri/i, /google us english/i, /\b(ava|zoe|allison|susan|nicky|samantha|aria|jenny|joanna|ivy|kendra|salli)\b/i];
+function englishVoices() { return (window.speechSynthesis ? speechSynthesis.getVoices() : []).filter(v => /^en[-_]/i.test(v.lang) && !NOVELTY.test(v.name)); }
+function rank(v) { for (let i = 0; i < PREFERRED.length; i++) if (PREFERRED[i].test(v.name)) return i; return PREFERRED.length + (/en[-_]US/i.test(v.lang) ? 0 : 1); }
+function bestVoice() {
+  const vs = englishVoices();
+  if (store.voice) { const m = vs.find(v => v.name === store.voice); if (m) return m; }
+  return vs.slice().sort((a, b) => rank(a) - rank(b))[0];
+}
 function say(text) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text); u.lang = 'en-US'; u.rate = 0.85;
+  const u = new SpeechSynthesisUtterance(text); const v = bestVoice();
+  if (v) { u.voice = v; u.lang = v.lang; } else u.lang = 'en-US';
+  u.rate = 0.9; u.pitch = 1.05;
   speechSynthesis.speak(u);
 }
+if ('speechSynthesis' in window) speechSynthesis.onvoiceschanged = () => {};
+function voiceMenu() {
+  const vs = englishVoices().sort((a, b) => rank(a) - rank(b)); const cur = bestVoice();
+  app.innerHTML = `${backBtn}<h2>🔊 Voice</h2><p>Pick the voice that sounds best. Names with "Natural", "Premium", "Enhanced" or "Siri" usually sound the most human.</p>
+  <div class="card">${vs.length ? vs.map((v, k) => `<div class="row" style="margin:6px 0"><button class="opt ${cur && cur.name === v.name ? 'right' : ''}" style="flex:1;margin:0;font-size:20px" onclick="pickVoice(${k})">${esc(v.name)} <small>(${esc(v.lang)})</small></button><button class="sec" onclick="testVoice(${k})">▶ Test</button></div>`).join('') : '<p>No voices found on this device.</p>'}</div>
+  <p><small class="help">On iPad: Settings &gt; Accessibility &gt; Spoken Content &gt; Voices to download better ones, then reload this page.</small></p>`;
+  window._vs = vs;
+}
+function testVoice(k) { speechSynthesis.cancel(); const u = new SpeechSynthesisUtterance('Spell the word because. I smiled because I was happy.'); u.voice = _vs[k]; u.lang = _vs[k].lang; u.rate = 0.9; u.pitch = 1.05; speechSynthesis.speak(u); }
+function pickVoice(k) { store.voice = _vs[k].name; save(); voiceMenu(); }
 const bar = (i, n) => `<div class="progress"><div style="width:${(i / n) * 100}%"></div></div>`;
 const backBtn = `<button class="sec back" onclick="home()">← Home</button>`;
 function sentenceWords(s) { return s.split(' '); }
@@ -123,7 +144,7 @@ function home() {
     <div class="card menu-card" onclick="choiceStart('parts')"><div class="big">🔤</div><h2>Word Parts</h2><p>Prefixes, suffixes and roots</p></div>
     <div class="card menu-card" onclick="choiceStart('words')"><div class="big">🎯</div><h2>Pick the Right Word</h2><p>their / there, to / too / two...</p></div>
   </div>
-  <p class="center"><small class="help">Your stars are saved on this device.</small></p>`;
+  <p class="center"><button class="sec" onclick="voiceMenu()">🔊 Change voice</button><br><small class="help">Your stars are saved on this device.</small></p>`;
 }
 
 /* ---------- SPELLING ---------- */
