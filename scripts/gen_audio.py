@@ -23,7 +23,8 @@ for w in dict.fromkeys(words):
             added += 1
             break
         except Exception as e:
-            print("retry", w, e, file=sys.stderr)
+            detail = e.read()[:200] if hasattr(e, "read") else ""
+            print("retry", w, e, detail, "keylen", len(key), file=sys.stderr)
             time.sleep(4 * (attempt + 1))
     else:
         print("FAILED", w, file=sys.stderr)
