@@ -109,7 +109,13 @@ function bestVoice() {
   return vs.slice().sort((a, b) => rank(a) - rank(b))[0];
 }
 let AUDIO = null, clip = null;
-fetch('audio/manifest.json').then(r => r.json()).then(m => { AUDIO = m; }).catch(() => {});
+const SYNC_URL = ''; // set to the Cloudflare Worker URL
+function loadManifest() { return fetch('audio/manifest.json?t=' + Date.now()).then(r => r.json()).then(m => { AUDIO = m; }).catch(() => {}); }
+loadManifest();
+fetch('words.txt?t=' + Date.now()).then(r => r.ok ? r.text() : '').then(t => {
+  const w = t.split('\n').map(x => x.trim()).filter(Boolean);
+  if (w.length) { store.custom = w; save(); }
+}).catch(() => {});
 function say(text) {
   if ('speechSynthesis' in window) speechSynthesis.cancel();
   if (clip) clip.pause();
@@ -186,10 +192,26 @@ function spellMenu() {
   <div class="grid">${groups.map((g, k) => `<div class="card menu-card" onclick="spellStart(${k})"><h2>${esc(g)}</h2><p>${g === "My school list" ? store.custom.length : SPELL[g].length} words</p></div>`).join('')}
   <div class="card menu-card" onclick='spellStart("Mix")'><h2>🎲 Mix of everything</h2><p>Words you missed come back first</p></div></div>
   <div class="card" style="margin-top:18px"><b>Add this week's school spelling list</b><br><small class="help">One word per line.</small>
-  <textarea id="custom" rows="5">${esc(store.custom.join('\n'))}</textarea><br><br><button onclick="saveCustom()">Save list</button></div>`;
+  <textarea id="custom" rows="5">${esc(store.custom.join('\n'))}</textarea><br><br><button onclick="saveCustom()">Save list</button> <small id="syncmsg" class="help"></small></div>`;
 }
 function saveCustom() {
   store.custom = $('#custom').value.split('\n').map(s => s.trim()).filter(Boolean); save(); spellMenu();
+  syncList();
+}
+async function syncList() {
+  const msg = t => { const e = $('#syncmsg'); if (e) e.textContent = t; };
+  if (!SYNC_URL) return;
+  let pass = localStorage.getItem('wwpass') || prompt('Family passcode (to share the list and get the new voice):');
+  if (!pass) return;
+  msg('Saving…');
+  try {
+    const r = await fetch(SYNC_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ passcode: pass, words: store.custom }) });
+    if (r.status === 401) { localStorage.removeItem('wwpass'); msg('Wrong passcode.'); return; }
+    if (!r.ok) throw 0;
+    localStorage.setItem('wwpass', pass);
+    msg('Saved. New voice clips ready in about a minute.');
+    setTimeout(loadManifest, 90000);
+  } catch (e) { msg('Saved on this device only.'); }
 }
 function spellStart(group) {
   if (typeof group === 'number') group = spellGroups()[group];
