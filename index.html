@@ -109,7 +109,7 @@ function bestVoice() {
   return vs.slice().sort((a, b) => rank(a) - rank(b))[0];
 }
 let AUDIO = null, clip = null;
-const SYNC_URL = ''; // set to the Cloudflare Worker URL
+const SYNC_URL = 'https://word-wizards-sync.wordwizards-family.workers.dev';
 function loadManifest() { return fetch('audio/manifest.json?t=' + Date.now()).then(r => r.json()).then(m => { AUDIO = m; }).catch(() => {}); }
 loadManifest();
 fetch('words.txt?t=' + Date.now()).then(r => r.ok ? r.text() : '').then(t => {
