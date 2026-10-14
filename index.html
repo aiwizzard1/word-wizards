@@ -108,7 +108,17 @@ function bestVoice() {
   if (store.voice) { const m = vs.find(v => v.name === store.voice); if (m) return m; }
   return vs.slice().sort((a, b) => rank(a) - rank(b))[0];
 }
+let AUDIO = null, clip = null;
+fetch('audio/manifest.json').then(r => r.json()).then(m => { AUDIO = m; }).catch(() => {});
 function say(text) {
+  if ('speechSynthesis' in window) speechSynthesis.cancel();
+  if (clip) clip.pause();
+  const f = AUDIO && AUDIO[String(text).trim().toLowerCase()];
+  if (!f) return ttsSay(text);
+  clip = new Audio('audio/' + f); clip.playbackRate = 0.95;
+  clip.play().catch(() => ttsSay(text));
+}
+function ttsSay(text) {
   if (!('speechSynthesis' in window)) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text); const v = bestVoice();
