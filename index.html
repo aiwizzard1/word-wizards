@@ -751,7 +751,16 @@ LEVELS.push({ name: "9. Compounds and commands", help: "A compound subject or ob
  D("Our chessboard is theirs", 1, 2, 3, {1: [0]}, [], "pn"),
  D("The soup is very hot", 1, 2, 4, {1: [0], 4: [3]}, [], "pa"),
  D("The origins of chess are unknown to us", 1, 4, 5, {1: [0]}, [{to: 1, prep: 2, obj: 3, om: []}, {to: 5, prep: 6, obj: 7, om: []}], "pa"),
- D("The sentinel took his rifle", 1, 2, 4, {1: [0], 4: [3]}, [], "obj")] });
+ D("The sentinel took his rifle", 1, 2, 4, {1: [0], 4: [3]}, [], "obj"),
+ D("Frogs jump and swim", 0, 1, null, {}, [], "obj", null, {V2: 3, cV: 2}),
+ D("Birds sing and fly", 0, 1, null, {}, [], "obj", null, {V2: 3, cV: 2}),
+ D("The children laughed and played", 1, 2, null, {1: [0]}, [], "obj", null, {V2: 4, cV: 3}),
+ D("The sentinel took his rifle and moved it to his shoulder", 1, 2, 4, {1: [0], 4: [3]}, [{to: 6, prep: 8, obj: 10, om: [9]}], "obj", null, {V2: 6, cV: 5, VO2: 7}),
+ D("Dad opened the box and found a map", 0, 1, 3, {3: [2], 7: [6]}, [], "obj", null, {V2: 5, cV: 4, VO2: 7}),
+ D("The side of the board is mine", 1, 5, 6, {1: [0]}, [{to: 1, prep: 2, obj: 4, om: [3]}], "pn"),
+ D("The knight on the board is yours", 1, 5, 6, {1: [0]}, [{to: 1, prep: 2, obj: 4, om: [3]}], "pn"),
+ D("The map of the old tomb is theirs", 1, 6, 7, {1: [0]}, [{to: 1, prep: 2, obj: 5, om: [3, 4]}], "pn"),
+ D("The key to the box of treasure is ours", 1, 7, 8, {1: [0]}, [{to: 1, prep: 2, obj: 4, om: [3]}, {to: 4, prep: 5, obj: 6, om: []}], "pn")] });
 let dg = null;
 function diagStart() {
   app.innerHTML = `${backBtn}<h2>📐 Sentence Diagrams</h2><p>Choose a level. Start at 1 and work your way up!</p>
@@ -764,22 +773,28 @@ function diagLoad() {
   const slot = (kind, idx, grp, label) => { const id = dg.slots.length; dg.slots.push({ id, kind, exp: d.w[idx].toLowerCase(), grp: grp || ('s' + id), label }); return `[[${id}]]`; };
   const col = (h, kind, label) => {
     let x = `<div class="col">${slot(kind, h, null, label)}`;
-    if ((d.m[h] || []).length) x += `<div class="mods">${d.m[h].map(i => slot('mod', i, 'g' + h, (h === d.V || (d.ot === 'pa' && h === d.O)) ? 'adverb' : 'adjective')).join('')}</div>`;
+    if ((d.m[h] || []).length) x += `<div class="mods">${d.m[h].map(i => slot('mod', i, 'g' + h, (h === d.V || h === d.x.V2 || (d.ot === 'pa' && h === d.O)) ? 'adverb' : 'adjective')).join('')}</div>`;
     if (h === d.V && d.I != null) {
       x += `<div class="prepwrap"><div class="col pobj">${slot('io', d.I, null, 'indirect object')}`;
       if ((d.m[d.I] || []).length) x += `<div class="mods">${d.m[d.I].map(i => slot('mod', i, 'g' + d.I, 'adjective')).join('')}</div>`;
       x += `</div></div>`;
     }
-    d.p.filter(p => p.to === h).forEach(p => {
-      x += `<div class="prepwrap">${slot('prep', p.prep, null, 'preposition')}<div class="col pobj">${slot('pobj', p.obj, null, 'object')}`;
-      if (p.om.length) x += `<div class="mods">${p.om.map(i => slot('mod', i, 'o' + p.obj, 'adjective')).join('')}</div>`;
-      x += `</div></div>`;
-    });
+    x += phr(h);
     return x + `</div>`;
   };
+  const phr = h => d.p.filter(p => p.to === h).map(p => {
+    let y = `<div class="prepwrap">${slot('prep', p.prep, null, 'preposition')}<div class="col pobj">${slot('pobj', p.obj, null, 'object')}`;
+    if (p.om.length) y += `<div class="mods">${p.om.map(i => slot('mod', i, 'o' + p.obj, 'adjective')).join('')}</div>`;
+    return y + phr(p.obj) + `</div></div>`;
+  }).join('');
+  const pred = () => {
+    const one = (v, o, o2, cO) => { let y = col(v, 'verb', 'verb'); if (o != null) { const lab = { obj: 'direct object', pn: 'predicate noun', pa: 'predicate adjective' }[d.ot]; y += `<div class="vbar ${d.ot === 'obj' ? 'half' : 'slant'}"></div>${cmp(o, o2, cO, d.ot, lab)}`; } return y; };
+    const a = one(d.V, d.O, d.x.O2, d.x.cO);
+    if (d.x.V2 == null) return a;
+    return `<div class="cmp"><div class="main">${a}</div><div class="conjrow"><div class="dots"></div>${slot('conj', d.x.cV, null, 'conjunction')}</div><div class="main">${one(d.x.V2, d.x.VO2)}</div></div>`;
+  };
   const cmp = (h, h2, c, kind, label) => h2 == null ? col(h, kind, label) : `<div class="cmp">${col(h, kind, label)}<div class="conjrow"><div class="dots"></div>${slot('conj', c, null, 'conjunction')}</div>${col(h2, kind, label)}</div>`;
-  let tpl = `<div class="main">${d.x.imp ? '<div class="col"><div class="slot imp">(You)</div></div>' : cmp(d.S, d.x.S2, d.x.cS, 'subj', 'subject')}<div class="vbar full"></div>${col(d.V, 'verb', 'verb')}`;
-  if (d.O != null) { const lab = { obj: 'direct object', pn: 'predicate noun', pa: 'predicate adjective' }[d.ot]; tpl += `<div class="vbar ${d.ot === 'obj' ? 'half' : 'slant'}"></div>${cmp(d.O, d.x.O2, d.x.cO, d.ot, lab)}`; }
+  let tpl = `<div class="main">${d.x.imp ? '<div class="col"><div class="slot imp">(You)</div></div>' : cmp(d.S, d.x.S2, d.x.cS, 'subj', 'subject')}<div class="vbar full"></div>${pred()}`;
   tpl += `</div>`;
   dg.tpl = tpl; dg.chips = shuffle(d.w.map((t, i) => i)); dg.msg = ['info', '💡 Tap a word, then tap the spot where it belongs. Need help? Tap "Hint".'];
   diagRender();
